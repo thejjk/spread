@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 
-import { View, KeyboardAvoidingView, Image, StyleSheet, TextInput, TouchableOpacity, Text, SafeAreaView } from 'react-native';
+import { View, AsyncStorage, Image, StyleSheet, TextInput, TouchableOpacity, Text, SafeAreaView } from 'react-native';
 
 import { Switch, ToggleButton, Appbar, RadioButton } from 'react-native-paper';
+
+import moment from 'moment';
+
 
 import api from '../service/api'
 
@@ -45,6 +48,8 @@ export default class ActionAnimals extends React.Component {
         switchLedPost: false,
         switchSoundPost: false,
 
+        ledNumber: 0,
+
         /*
         led1dog: 1,
         led2pig: 1,
@@ -54,12 +59,17 @@ export default class ActionAnimals extends React.Component {
         led6frog: 1,
 */
 
+        order: 1,
+        
         led1dog: 1,
         led2pig: 2,
         led3cat: 3,
         led4snake: 4,
         led5bode: 5,
         led6frog: 6,
+
+        error: false,
+        erroTentativa: false,
 
         arrayActions: [],
     }
@@ -69,50 +79,61 @@ export default class ActionAnimals extends React.Component {
     }
 
     async finally() {
-        const testRelators = {
-            action_led1dog: led1dog,
-            action_led2pig: led2pig,
-            action_led3cat: led3cat,
-            action_led4snake: led4snake,
-            action_led5bode: led5bode,
-            action_led6frog: led6frog,
+
+        let actions = this.state.arrayActions;
+        let sessionPatient = {};
+         
+        await AsyncStorage.getItem(`@teste@sessionPatient`)
+        .then(req => JSON.parse(req))
+        .then(json => [sessionPatient = json, console.log('paciente da sessão', json)])
+        .catch(error => console.log('error!'));
+
+
+        var date = moment()
+        .utcOffset('-03:00')
+        .format('YYYY-MM-DD//hh:mm:ss//A');
+        
+        // PEGAR INFORMAÇÕES DO HARDWARE
+        // SALVAR INFORMAÇÕES DO HARDWARE
+        
+
+        let report = {
+            id: `${sessionPatient.db_name}#${date}`,
+            actionsSoftware: actions,
+            actionsHardware: [],
         }
+        sessionPatient.db_reports = []
+        sessionPatient.db_reports.push(report);
+
+        await AsyncStorage.setItem(`@teste@sessionPatient`, JSON.stringify(sessionPatient))
+        .then(json => this.navigationToReport())
+        .catch(error => this.setState({error: true}), console.log('deu ruim'));
+    }
+    
+    navigationToReport() {
         this.props.navigation.navigate('Finaly');
     }
 
-
-    saveReports() {
-
-
-        console.log('SAVEREPORTS')
-        console.log(this.state.led1dog)
-
-        let arrayValor = [
-            this.state.led1dog,
-            this.state.led2pig,
-            this.state.led3cat,
-            this.state.led4snake,
-            this.state.led5bode,
-            this.state.led6frog
-        ]
-
-        let arrayStatus = [
-            this.state.switchLed,
-            this.state.switchLedPost,
-            this.state.switchSound,
-            this.state.switchSoundPost
-        ]
-
-        let objValor = {
-            arrayValor,
-            arrayStatus
-        }
-
-        console.log('ARRAYVALOR')
-        console.log(objValor)
+    handleSubmit(number) {
+        this.setState({ ledNumber: number })
+        
     }
 
-    async handleSubmit(number) {
+        
+    async handleSubmitStartInteration() {
+        //dog led1 | pig led2 | cat led3 | snake led4 | bode led5 | frog led6on
+    
+        if(!ledNumber || ledNumber == 0){
+            console.log('o cara tentou ativar sem selecionar');
+            return this.setState({ erroTentativa: true })
+        }
+        this.setState({ order: this.state.order + 1 })
+
+
+        //this.setState({ ledNumber: number })
+        let number = this.state.ledNumber;
+
+
 
         let arrayStatus = [
             this.state.switchLed,
@@ -122,101 +143,27 @@ export default class ActionAnimals extends React.Component {
         ]
 
         let informations = {
+            order: this.state.order, 
             switch: arrayStatus,
             animal: number
         }
 
-        //this.setState({ arrayActions: this.state.arrayActions.push(informations)})
+        let aux = this.state.arrayActions;
+        aux.push(informations);
+        this.setState({ arrayActions: aux})
+        
+        //console.log('number :', this.state.arrayActions);
         //this.setState({ led1dog: this.state.led1dog + 1 })
         //console.log('led1dog :', this.state.led1dog);
-        //sconsole.log('number :', number);
+
         //console.log(`/led${number}on`);
         //console.log('informations number :', informations.animal);
         const response = await api.get(`/led${number}on`)
     }
-
-    //dog led1
-    async handleSubmit1() {
-
-        let arrayStatus = [
-            this.state.switchLed,
-            this.state.switchSound,
-            this.state.switchLedPost,
-            this.state.switchSoundPost
-        ]
-
-        let informations = {
-            switch: arrayStatus,
-            animal: this.state.led1dog
-        }
-
-        this.setState({ arrayActions: this.state.arrayActions.push(informations)})
-        //this.setState({ led1dog: this.state.led1dog + 1 })
-        //console.log('led1dog :', this.state.led1dog);
-        
-        //console.log('informations :', informations);
-        //console.log('informations :', informations.switch[2]);
-        const response = await api.get('/led1on')
-    }
-    //pig led2
-    async  handleSubmit2() {
-        this.setState({ led2pig: this.state.led2pig + 1 })
-        console.log('led1dog :', this.state.led2pig);
-        const response = await api.get('/led2on')
-    }
-    //cat led3
-    async handleSubmit3() {
-        this.setState({ led3cat: this.state.led3cat + 1 })
-        console.log('led3cat', this.state.led3cat);
-        const response = await api.get('/led3on')
-    }
-    //snake led4
-    async handleSubmit4() {
-        this.setState({ led4snake: this.state.led4snake + 1 })
-        console.log('led4snake :', this.state.led4snake);
-        const response = await api.get('/led4on')
-    }
-    //bode led5
-    async handleSubmit5() {
-        this.setState({ led5bode: this.state.led5bode + 1 })
-        console.log('led5bode :', this.state.led5bode);
-        const response = await api.get('/led5on')
-    }
-    //frog jabba led6on
-    async handleSubmit6() {
-        this.setState({ led6frog: this.state.led6frog + 1 })
-        console.log('led6frog :', this.state.led6frog);
-        const response = await api.get('/led6on')
-    }
-
-    async handleSubmitStatusLed() {
+    
+    async handleSubmitStatus(valor) {
         console.log('testo');
-        const response = await api.get('/led');
-    }
-
-    async handleSubmitStatusSound() {
-        const response = await api.get('/sound');
-    }
-
-    async handleSubmitStatusLedPost() {
-        console.log('testo');
-        const response = await api.get('/ledPost');
-    }
-
-    async handleSubmitStatusSoundPost() {
-        const response = await api.get('/soundPost');
-    }
-
-    async finally() {
-        const testRelators = {
-            action_led1dog: led1dog,
-            action_led2pig: led2pig,
-            action_led3cat: led3cat,
-            action_led4snake: led4snake,
-            action_led5bode: led5bode,
-            action_led6frog: led6frog,
-        }
-        this.props.navigation.navigate('Finaly');
+        const response = await api.get(`${valor}`);
     }
 
     _goBack = () => console.log('Went back');
@@ -250,7 +197,7 @@ export default class ActionAnimals extends React.Component {
                                 <Switch
                                     value={this.state.switchLed}
                                     onValueChange={switchLed => this.setState({ switchLed })}
-                                    onTouchStart={this.handleSubmitStatusLed}
+                                    onTouchStart={() => {this.handleSubmitStatus('led')}}
                                 />
                             </View>
                             <View style={style.rowActionSwitch}>
@@ -261,7 +208,7 @@ export default class ActionAnimals extends React.Component {
                                 <Switch
                                     value={this.state.switchSound}
                                     onValueChange={switchSound => this.setState({ switchSound })}
-                                    onTouchStart={this.handleSubmitStatusSound}
+                                    onTouchStart={() => { this.handleSubmitStatus('sound')}}
                                 />
                             </View>
                         </View>
@@ -293,7 +240,7 @@ export default class ActionAnimals extends React.Component {
                             </View>
                             <TouchableOpacity
                                 style={style.buttonAnimals}
-                                onPress={() => { this.handleSubmit3(), this.setState({ checked1: 'sad', checked2: 'sad', checked3: 'first', checked4: 'not', checked5: 'not', checked6: 'not' }); }}
+                                onPress={() => { this.handleSubmit(3), this.setState({ checked1: 'sad', checked2: 'sad', checked3: 'first', checked4: 'not', checked5: 'not', checked6: 'not' }); }}
                             >
                                 <Image
                                     style={style.avatar}
@@ -310,7 +257,7 @@ export default class ActionAnimals extends React.Component {
                             </View>
                             <TouchableOpacity
                                 style={style.buttonAnimals}
-                                onPress={() => { this.handleSubmit5(), this.setState({ checked1: 'sad', checked2: 'not', checked3: 'not', checked4: 'not', checked5: 'first', checked6: 'not' })}}
+                                onPress={() => { this.handleSubmit(5), this.setState({ checked1: 'sad', checked2: 'not', checked3: 'not', checked4: 'not', checked5: 'first', checked6: 'not' })}}
                             >
                                 <Image
                                     style={style.avatar}
@@ -332,7 +279,7 @@ export default class ActionAnimals extends React.Component {
                                 <Switch
                                     value={this.state.switchLedPost}
                                     onValueChange={switchLedPost => this.setState({ switchLedPost })}
-                                    onTouchStart={this.handleSubmitStatusLedPost}
+                                    onTouchStart={() => {this.handleSubmitStatus('ledPost')}}
                                 />
                             </View>
                             <View style={style.rowActionSwitch}>
@@ -343,7 +290,7 @@ export default class ActionAnimals extends React.Component {
                                 <Switch
                                     value={this.state.switchSoundPost}
                                     onValueChange={switchSoundPost => this.setState({ switchSoundPost })}
-                                    onTouchStart={this.handleSubmitStatusSoundPost} />
+                                    onTouchStart={() => {this.handleSubmitStatus('soundPost')}} />
                             </View>
                         </View>
 
@@ -357,7 +304,7 @@ export default class ActionAnimals extends React.Component {
                             </View>
                             <TouchableOpacity
                                 style={style.buttonAnimals}
-                                onPress={() => { this.handleSubmit4, this.setState({ checked1: 'nor', checked2: 'not', checked3: 'not', checked4: 'first', checked5: 'not', checked6: 'not' }); }}
+                                onPress={() => { this.handleSubmit(4), this.setState({ checked1: 'nor', checked2: 'not', checked3: 'not', checked4: 'first', checked5: 'not', checked6: 'not' }); }}
                             >
                                 <Image
                                     style={style.avatar}
@@ -375,7 +322,7 @@ export default class ActionAnimals extends React.Component {
                             </View>
                             <TouchableOpacity
                                 style={style.buttonAnimals}
-                                onPress={() => { this.handleSubmit2 }}
+                                onPress={() => { this.handleSubmit(2), this.setState({ checked1: 'nor', checked2: 'first', checked3: 'not', checked4: 'not', checked5: 'not', checked6: 'not' }); }}
                             >
                                 <Image
                                     style={style.avatar}
@@ -389,12 +336,12 @@ export default class ActionAnimals extends React.Component {
                                 <RadioButton
                                     value="first"
                                     status={this.state.checked6 === 'first' ? 'checked' : 'unchecked'}
-                                    onPress={() => { this.handleSubmit6, this.setState({ checked6: 'first' }); }}
+                                    onPress={() => { this.setState({ checked6: 'first' }); }}
                                 />
                             </View>
                             <TouchableOpacity
                                 style={style.buttonAnimals}
-                                onPressStart={() => { this.handleSubmit6(), this.setState({ checked1: 'sad', checked2: 'not', checked3: 'not', checked4: 'not', checked5: 'not', checked6: 'first' }); }}
+                                onPress={() => { this.handleSubmit(6), this.setState({ checked1: 'sad', checked2: 'not', checked3: 'not', checked4: 'not', checked5: 'not', checked6: 'first' }); }}
                             >
                                 <Image
                                     style={style.avatar}
@@ -413,14 +360,18 @@ export default class ActionAnimals extends React.Component {
                             FINALIZAR
                     </Text>
                     </TouchableOpacity>
+                    
                     <TouchableOpacity style={style.buttonStart}
-                        onPress={() => this.saveReports()}
+                        onPress={() => this.handleSubmitStartInteration()}
                     >
                         <Text style={style.buttonTextStart}>
                             INICIAR
                     </Text>
                     </TouchableOpacity>
+                    
                 </View>
+
+
 
             </SafeAreaView>
         )
@@ -518,13 +469,13 @@ const style = StyleSheet.create({
     },
 
     buttonEnd: {
-        height: 30,
+        height: 32,
         width: 130,
         backgroundColor: '#F00202',
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 13,
-        top: -20,
+        top: -16,
         marginRight: 29
     },
 

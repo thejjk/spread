@@ -13,6 +13,32 @@ export default function Login( { navigation}) {
     const [aprovado, setAprovado] = useState('');
     const [result, setResult] = useState('');
 
+    /*
+    async function getAllKeys() {
+        console.log("Pegando as chaves");
+
+        try {
+         //   const keys = await AsyncStorage.getAllKeys();
+         //   setListKeys(keys);
+         //   console.log("Keys", listKeys);
+            
+        } catch (error) {
+            console.log('Error get all app data.');
+            alert('Error get all app data.');
+        }
+    }
+
+       // const [listkeys, setListKeys] = useState('');
+    
+   // const [favor, setFavor] = useEffect('');
+/*
+    useEffect(
+        () => {
+            getAllKeys()
+        }, [favor]
+    )
+*/
+
 
     function navigationToSigin() {
         navigation.navigate('Sigin');
@@ -22,18 +48,42 @@ export default function Login( { navigation}) {
         navigation.navigate('ActionAnimals');
     }
 
+    async function cleanAll() {
+
+        console.log("Resetando");
+
+        try {
+            const keys = await AsyncStorage.getAllKeys();
+            console.log("Keys", keys);
+            await AsyncStorage.multiRemove(keys);
+        } catch (error) {
+            console.log('Error clearing app data.');
+            alert('Error clearing app data.');
+        }
+
+        setError(3);
+/*
+        await AsyncStorage.setItem('@teste@sessionkey', JSON.stringify(data))
+            .then(json => [console.log(json), navigation.navigate('Patient')])
+            .catch(error => setError(true));
+*/            
+    }
+
     async function navigationToPatient(data) {
 
         console.log(data);
 
+        let resposta = '';
         await AsyncStorage.setItem('@teste@sessionkey', JSON.stringify(data))
-            .then(json => [console.log(json), navigation.navigate('Patient')])
-            .catch(error => setError(true));
+            .then(json => resposta = json)
+            .catch(error => setError(0));
 
-        setAprovado('');
-        setError('');
-        setEmail('');
-        setPassword('');
+        if(resposta) {
+            console.log('entrei no if');
+        } else {
+            console.log('entrei no else');
+            setError(0)
+        }
 
         //navigation.navigate('Patient');
     }
@@ -41,13 +91,17 @@ export default function Login( { navigation}) {
     async function handleSubmit() {
 
         if (!email || !password) {
-            return setError(true);
+            return setError(1);
         }
 
-        await AsyncStorage.getItem(`@teste@userkey${email}`)
-        .then(req => JSON.parse(req))
-        .then(json => [console.log('sucesso!!!'), navigationToPatient(json)])
-        .catch(error => setError(true));
+        try {
+            await AsyncStorage.getItem(`@teste@userkey${email}`)
+                .then(req => JSON.parse(req))
+                .then(json => [console.log('sucesso!!!'), navigationToPatient(json)])
+                .catch(error => setError(2));
+        } catch (error) {
+            alert(`Error ${error}, contact support`);    
+        }
 
     }
 
@@ -101,7 +155,7 @@ export default function Login( { navigation}) {
             </Submit>
 
             <Text style={style.errorText}>
-                    {error == false ? '' : 'Email ou senha não preenchido'}
+                    {error == 0 ? '' : (error == 1 ? 'Email ou senha não preenchido' : ( error == 2 ? 'Email ou senha inválido' : '')) }
             </Text>
 
             <Text style={style.link} onPress={navigationToSigin}>
@@ -109,6 +163,9 @@ export default function Login( { navigation}) {
             </Text>
             <Text style={style.link} onPress={navigationToActionAnimals}>
                     Interação
+            </Text>
+            <Text style={style.link} onPress={cleanAll}>
+                    Resetar
             </Text>
         </View>
     </SafeAreaView>

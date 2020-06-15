@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "Belast",
-    "slug": "wifi-test",
-    "privacy": "public",
-    "sdkVersion": "36.0.0",
+    "name": "HelloWorld",
+    "slug": "projeto",
     "platforms": [
-      "android"
+      "ios",
+      "android",
+      "web"
     ],
-    "version": "1.0.1",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -18,12 +18,11 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "android": {
-      "package": "com.compa.compaa",
-      "versionCode": 1
-    },
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "ios": {
+      "supportsTablet": true
+    }
   }
 }

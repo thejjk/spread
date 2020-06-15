@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import { SafeAreaView, Picker, View, KeyboardAvoidingView, Keyboard, Platform, AsyncStorage, StyleSheet, TextInput, TouchableOpacity, Text, Alert } from 'react-native';
 import { Button, Switch, ToggleButton, Appbar, RadioButton } from 'react-native-paper';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
 //import getRealm from "../service/realm";
 import people from "../assets/people-outline.png";
 
 export default function Sigin({ navigation }) {
-    /*
-    function constructor(props) {
-        super(props)
-    }
-*/
+
     const [error, setError] = useState('');
     const [name, setName] = useState('');
     const [genero, setGenero] = useState('');
@@ -392,4 +387,8 @@ const style = StyleSheet.create({
     },
 
 })
+
+
+
+
 

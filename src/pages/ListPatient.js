@@ -10,16 +10,17 @@ export default function NewPatient({ navigation }) {
 
 
     
-function Item({ title }) {
+function Item({ title, dado }) {
     return (
         <View style={style.item}>
-            <Text onPress={() => navigateAction()} style={style.itemText}>{title}</Text>
+            <Text onPress={() => navigateAction(dado)} style={style.itemText}>{title}</Text>
         </View>
     );
 }
 
     const [list, setList] = useState('');
     const [favor, setFavor] = useState('');
+    const [error, setError] = useState('');
 
 
     useEffect(
@@ -32,8 +33,10 @@ function Item({ title }) {
         navigation.navigate('Patient')
     }
 
-    function navigateAction() {
-        navigation.navigate('ActionAnimals')
+    async function navigateAction(dado) {
+        await AsyncStorage.setItem(`@teste@sessionPatient`, JSON.stringify(dado))
+        .then(json => navigation.navigate('ActionAnimals'))
+        .catch(error => setError(true));
     }
 
     async function handleSubmit() {
@@ -69,7 +72,8 @@ function Item({ title }) {
                     data={list}
                     renderItem={({ item }) => 
                     <Item
-                        title={item.db_name}
+                        title={item.db_name }
+                        dado={item}
                     />}
                     
                 />

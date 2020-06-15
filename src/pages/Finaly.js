@@ -24,6 +24,24 @@ export default function Finaly( { navigation}) {
         navigation.navigate('ActionAnimals');
     }
 
+    function getKey() {
+        const result = AsyncStorage.getItem(`@teste@sessionActiveActions`)
+            .then(req => JSON.parse(req))
+            .then(json => console.log(json))
+            .catch(error => console.log('error!'));
+    }
+
+    function alerta(json) {
+        Alert.alert(
+            'success!',
+            'cadastro realizado',
+            [
+                { text: `${json}`, onPress: () => navigation.navigate('Patient') },
+            ],
+        );
+    
+    }
+
 
     return (
     <SafeAreaView style={style.container}>
