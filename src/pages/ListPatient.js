@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { SafeAreaView, Picker, View, KeyboardAvoidingView, Keyboard, Platform, AsyncStorage, StyleSheet, TextInput, TouchableOpacity, Text, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { FlatList, SafeAreaView, Picker, View, KeyboardAvoidingView, Keyboard, Platform, AsyncStorage, StyleSheet, TextInput, TouchableOpacity, Text, Alert } from 'react-native';
 import { Button, Switch, ToggleButton, Appbar, RadioButton } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -7,124 +7,52 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import people from "../assets/people-outline.png";
 
 export default function NewPatient({ navigation }) {
-    /*
-    function constructor(props) {
-        super(props)
-    }
-*/
+
+
+    
+function Item({ title, dado }) {
+    return (
+        <View style={style.item}>
+            <Text onPress={() => navigateAction(dado)} style={style.itemText}>{title}</Text>
+        </View>
+    );
+}
+
+    const [list, setList] = useState('');
+    const [favor, setFavor] = useState('');
     const [error, setError] = useState('');
-    const [name, setName] = useState('');
-    const [genero, setGenero] = useState('');
-    const [diag, setDiag] = useState('');
-    const [parentName, setParentName] = useState('');
-    const [parentCall, setParentCall] = useState('');
-    const [parentEmail, setParentEmail] = useState('');
-    //const [birthday, setBirthday] = useState('');
 
-    function navigationToPatient() {
-        Alert.alert(
-            'success!',
-            'cadastro realizado',
-            [
-                { text: 'OK', onPress: () => navigation.navigate('Patient') },
-            ],
-        );
 
-        setError('');
-        setName('');
-        setGenero('');
-        setDiag('');
-        setParentName('');
-        setParentCall('');
-        setParentEmail('');
-
+    useEffect(
+        () => {
+            handleSubmit()
+        }, [favor]
+    )
+    
+    function navigatePatient() {
+        navigation.navigate('Patient')
     }
 
-    function navigatePatient () {
-        navigation.navigate('Patient')
+    async function navigateAction(dado) {
+        await AsyncStorage.setItem(`@teste@sessionPatient`, JSON.stringify(dado))
+        .then(json => navigation.navigate('ActionAnimals'))
+        .catch(error => setError(true));
     }
 
     async function handleSubmit() {
 
-        if (
-            !name
-            || !genero
-            || !diag
-            || !parentName
-            || !parentCall
-            || !parentEmail
-        ) {
-            return setError(true);
-        }
-        const data = {
-            db_name: name,
-            db_genero: genero,
-            db_diag: diag,
-            db_parentName: parentName,
-            db_parentCall: parentCall,
-            db_parentEmail: parentEmail
-        };
-
-        let list = [];
+        let lista = [];
         let sessionUser = {};
         await AsyncStorage.getItem(`@teste@sessionkey`)
             .then(req => JSON.parse(req))
-            .then(json => [sessionUser = json, list =json.db_patient])
+            .then(json => [sessionUser = json, lista = json.db_patient])
             .catch(error => console.log('error!'));
+
+        console.log('lista');
+        console.log(lista);
         
-
-        sessionUser.db_patient.push(data);    
-        //JSON.parse(sessionUser)
-        console.log('sessionUser');
-        console.log(sessionUser);
-
-        
-        console.log('list');
-        console.log(list);
-
-        console.log(list[0].db_diag);
-
-        await AsyncStorage.setItem(`@teste@userkey${sessionUser.db_email}`, JSON.stringify(sessionUser))
-        .then(json => console.log('sucesso'))
-        .catch(error => setError(true));
-        
-
-        await AsyncStorage.setItem(`@teste@sessionkey`, JSON.stringify(sessionUser))
-            .then(json => navigationToPatient())
-            .catch(error => setError(true));
-                    
-            
+        setList(lista);
     }
-
-    function getKeyValue() {
-        const result = AsyncStorage.removeItem(`@teste@somekey${email}`)
-            .then(json => console.log('success'))
-            .catch(error => console.log('error!'));
-    }
-
-    function getKey() {
-        const result = AsyncStorage.getItem(`@teste@somekey${email}`)
-            .then(req => JSON.parse(req))
-            .then(json => console.log(json))
-            .catch(error => console.log('error!'));
-    }
-
-    function Submit({ error }) {
-        return (
-            <TouchableOpacity
-                onPress={handleSubmit}
-                style={[
-                    style.button,
-                    { backgroundColor: error ? '#0094d4' : '#0094d4' },
-                ]}
-            >
-                <Text style={style.buttonText}>
-                    Finalizar
-                </Text>
-            </TouchableOpacity>
-        )
-    }
-
 
     return (
         <SafeAreaView style={style.container}>
@@ -132,78 +60,24 @@ export default function NewPatient({ navigation }) {
             <Appbar style={style.bottom}>
                 <Appbar.Header style={style.appHeader}>
                     <Appbar.BackAction
-                        onPress={navigatePatient}
+                        onPress={() => navigatePatient}
                     />
-                    <Text style={style.title}>Cadastro de Paciente                                  </Text>
+                    <Text style={style.title}>Lista de Paciente                                                                                 </Text>
                 </Appbar.Header>
             </Appbar>
 
             <View style={style.form}>
                 <View style={style.view}>
+                <FlatList
+                    data={list}
+                    renderItem={({ item }) => 
+                    <Item
+                        title={item.db_name }
+                        dado={item}
+                    />}
+                    
+                />
                 </View>
-                <View>
-                    <TextInput
-                    value={name}
-                    onChangeText={setName}
-                        style={style.input}
-                        placeholder='Nome completo'
-                        placeholderTextColor='#999'
-                        autoCorrect={false}
-                    />
-                    <TextInput
-                    value={diag}
-                    onChangeText={setDiag}
-                        style={style.input}
-                        placeholder='Diagnóstivo'
-                        placeholderTextColor='#999'
-                        autoCorrect={false}
-                    />
-
-                    <TextInput
-                    value={genero}
-                    onChangeText={setGenero}
-                        style={style.input}
-                        placeholder='Gênero'
-                        placeholderTextColor='#999'
-                        autoCorrect={false}
-                    />
-
-                    <TextInput
-                    value={parentName}
-                    onChangeText={setParentName}
-                        style={style.input}
-                        placeholder='Nome do responsável'
-                        placeholderTextColor='#999'
-                        autoCorrect={false}
-                    />
-
-                    <TextInput
-                    value={parentEmail}
-                    onChangeText={setParentEmail}
-                        style={style.inputCrefito}
-                        placeholder='Email do responsável'
-                        placeholderTextColor='#999'
-                        autoCorrect={false}
-                    />
-                    <View style={style.view3}>
-                        <TextInput
-                        value={parentCall}
-                        onChangeText={setParentCall}
-                            style={style.inputDDD}
-                            placeholder='DDD - Contato do resposável          '
-                            placeholderTextColor='#999'
-                            autoCorrect={false}
-                        />
-                    </View>
-                </View>
-
-                <Submit error={error}>
-                </Submit>
-
-                <Text style={style.errorText}>
-                    {error == false ? '' : 'Existem campos não preenchidos'}
-            </Text>
-
             </View>
         </SafeAreaView>
     )
@@ -249,8 +123,8 @@ const style = StyleSheet.create({
         marginTop: 15
     },
 
-    buttonText: {
-        color: '#FFF',
+    title: {
+        color: '#000000',
         fontWeight: 'bold',
         fontSize: 20,
     },
@@ -307,24 +181,10 @@ const style = StyleSheet.create({
         marginBottom: 20,
     },
 
-    logoAvatar: {
-        width: 40,
-        height: 40,
-        resizeMode: 'stretch',
-    },
-
-    radioAction: {
-        alignContent: "center",
-        alignItems: 'baseline',
-        flexDirection: 'row',
-    },
-
-    radioText: {
-        fontSize: 16,
-        color: '#444',
+    itemText: {
         fontWeight: 'bold',
+        fontSize: 20,
     },
-
 
     view1: {
         paddingHorizontal: 50,
@@ -398,7 +258,7 @@ const style = StyleSheet.create({
         fontStyle: 'normal',
         marginTop: 10,
         justifyContent: 'center',
-        alignItems: 'center', 
+        alignItems: 'center',
         flexDirection: 'column',
         textAlign: 'center',
     },

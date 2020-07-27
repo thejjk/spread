@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "Belast",
-    "slug": "wifi-test",
+    "name": "SensorialToy",
+    "slug": "SensorialToy",
     "privacy": "public",
-    "sdkVersion": "36.0.0",
+    "sdkVersion": "37.0.0",
     "platforms": [
       "android"
     ],

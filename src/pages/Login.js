@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 
 import { AsyncStorage, View, KeyboardAvoidingView, Image, StyleSheet, TextInput, TouchableOpacity, Text, SafeAreaView } from 'react-native';
 
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 import logo from "../assets/logo.png";
 
-export default function Login( { navigation}) {
+export default function Login({ navigation }) {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -13,6 +14,34 @@ export default function Login( { navigation}) {
     const [aprovado, setAprovado] = useState('');
     const [result, setResult] = useState('');
 
+    /*
+    async function getAllKeys() {
+        console.log("Pegando as chaves");
+
+        try {
+         //   const keys = await AsyncStorage.getAllKeys();
+         //   setListKeys(keys);
+         //   console.log("Keys", listKeys);
+            
+        } catch (error) {
+            console.log('Error get all app data.');
+            alert('Error get all app data.');
+        }
+    }
+
+       // const [listkeys, setListKeys] = useState('');
+    
+   // const [favor, setFavor] = useEffect('');
+/*
+    useEffect(
+        () => {
+            getAllKeys()
+        }, [favor]
+    )
+*/
+    function navigationToReport() {
+        navigation.navigate('Report');
+    }
 
     function navigationToSigin() {
         navigation.navigate('Sigin');
@@ -20,34 +49,63 @@ export default function Login( { navigation}) {
 
     function navigationToActionAnimals() {
         navigation.navigate('ActionAnimals');
+        //navigation.navigate('Report');
+    }
+
+    async function cleanAll() {
+
+        console.log("Resetando");
+
+        try {
+            const keys = await AsyncStorage.getAllKeys();
+            console.log("Keys", keys);
+            await AsyncStorage.multiRemove(keys);
+        } catch (error) {
+            console.log('Error clearing app data.');
+            alert(`Error clearing app data. ${error}`);
+        }
+
+        setError(3);
+        /*
+                await AsyncStorage.setItem('@teste@sessionkey', JSON.stringify(data))
+                    .then(json => [console.log(json), navigation.navigate('Patient')])
+                    .catch(error => setError(true));
+        */
     }
 
     async function navigationToPatient(data) {
 
         console.log(data);
 
+        let resposta = '';
         await AsyncStorage.setItem('@teste@sessionkey', JSON.stringify(data))
-            .then(json => [console.log(json), navigation.navigate('Patient')])
-            .catch(error => setError(true));
+            .then(json => resposta = json)
+            .catch(error => setError(0));
 
-        setAprovado('');
-        setError('');
-        setEmail('');
-        setPassword('');
+        /*if(resposta) {
+            console.log('entrei no if');
+        } else {
+            console.log('entrei no else');
+            setError(0)
+        }*/
 
-        //navigation.navigate('Patient');
+        navigation.navigate('Patient');
     }
 
     async function handleSubmit() {
 
         if (!email || !password) {
-            return setError(true);
+            return setError(1);
         }
 
-        await AsyncStorage.getItem(`@teste@userkey${email}`)
-        .then(req => JSON.parse(req))
-        .then(json => [console.log('sucesso!!!'), navigationToPatient(json)])
-        .catch(error => setError(true));
+        try {
+            await AsyncStorage.getItem(`@teste@userkey${email}`)
+                .then(req => JSON.parse(req))
+                .then(json => [console.log('sucesso!!!'), navigationToPatient(json)])
+                .catch(error => setError(2));
+        } catch (error) {
+            alert(`Error ${error}, contact support`);
+        }
 
     }
 
@@ -67,51 +125,72 @@ export default function Login( { navigation}) {
         )
     }
 
-    return (
-    <SafeAreaView style={style.container}>
-        <Image source={logo}/>
-
-        <View style={style.form}>
+    const RightActions = () => {
+        return (
             <View>
-                <TextInput 
-                    value={email}
-                    onChangeText={setEmail}
-                    style={style.input}
-                    placeholder='E-mail'
-                    placeholderTextColor='#999'
-                    keyboardType='email-address'
-                    autoCapitalize='none'
-                    autoCorrect={false}
-                />
+                <Text style={style.link} onPress={navigationToReport}>
+                    Report
+            </Text>
             </View>
+        )
+    };
+
+    const LeftActions = () => {
+        return (
             <View>
-                <TextInput 
-                    value={password}
-                    onChangeText={setPassword}
-                    style={style.input}
-                    placeholder='Senha'
-                    placeholderTextColor='#999'
-                    autoCapitalize='none'
-                    autoCorrect={false}
-                    secureTextEntry={true}
-                />
-            </View>
-
-            <Submit error={error}>
-            </Submit>
-
-            <Text style={style.errorText}>
-                    {error == false ? '' : 'Email ou senha não preenchido'}
-            </Text>
-
-            <Text style={style.link} onPress={navigationToSigin}>
-                    Cadastre-se agora
-            </Text>
-            <Text style={style.link} onPress={navigationToActionAnimals}>
+                <Text style={style.link} onPress={navigationToActionAnimals}>
                     Interação
             </Text>
-        </View>
-    </SafeAreaView>
+            </View>
+        )
+    };
+
+    return (
+        <SafeAreaView style={style.container}>
+            <Image source={logo} />
+
+            <View style={style.form}>
+                <View>
+                    <TextInput
+                        value={email}
+                        onChangeText={setEmail}
+                        style={style.input}
+                        placeholder='E-mail'
+                        placeholderTextColor='#999'
+                        keyboardType='email-address'
+                        autoCapitalize='none'
+                        autoCorrect={false}
+                    />
+                </View>
+                <View>
+                    <TextInput
+                        value={password}
+                        onChangeText={setPassword}
+                        style={style.input}
+                        placeholder='Senha'
+                        placeholderTextColor='#999'
+                        autoCapitalize='none'
+                        autoCorrect={false}
+                        secureTextEntry={true}
+                    />
+                </View>
+
+                <Submit error={error}>
+                </Submit>
+
+                <Text style={style.errorText}>
+                    {error == 0 ? '' : (error == 1 ? 'Email ou senha não preenchido' : (error == 2 ? 'Email ou senha inválido' : ''))}
+                </Text>
+                <Swipeable
+                    renderLeftActions={LeftActions}
+                    renderRightActions={RightActions}>
+                    <Text style={style.link} onPress={navigationToSigin}>
+                        Cadastre-se agora
+            </Text>
+                </Swipeable>
+
+            </View>
+        </SafeAreaView>
     )
 }
 
@@ -125,7 +204,7 @@ const style = StyleSheet.create({
     form: {
         alignSelf: "stretch",
         paddingHorizontal: 30,
-        marginTop: 30 
+        marginTop: 30
     },
 
     label: {
@@ -158,7 +237,7 @@ const style = StyleSheet.create({
         color: '#FFF',
         fontWeight: 'bold',
         fontSize: 20,
-    }, 
+    },
 
     link: {
         color: '#0094d4',
@@ -166,7 +245,7 @@ const style = StyleSheet.create({
         fontStyle: 'normal',
         marginTop: 15,
         justifyContent: 'center',
-        alignItems: 'center', 
+        alignItems: 'center',
         flexDirection: 'column',
         textAlign: 'center',
     },
@@ -176,7 +255,7 @@ const style = StyleSheet.create({
         fontStyle: 'normal',
         marginTop: 15,
         justifyContent: 'center',
-        alignItems: 'center', 
+        alignItems: 'center',
         flexDirection: 'column',
         textAlign: 'center',
     },

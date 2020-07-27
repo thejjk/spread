@@ -11,7 +11,7 @@ export default function NewPatient({ navigation }) {
     function constructor(props) {
         super(props)
     }
-*/
+    */
     const [error, setError] = useState('');
     const [name, setName] = useState('');
     const [genero, setGenero] = useState('');
@@ -88,12 +88,14 @@ export default function NewPatient({ navigation }) {
         .then(json => console.log('sucesso'))
         .catch(error => setError(true));
         
-
+        let sucesso = false;
         await AsyncStorage.setItem(`@teste@sessionkey`, JSON.stringify(sessionUser))
-            .then(json => navigationToPatient())
-            .catch(error => setError(true));
-                    
+            .then(json => sucesso = true)
+            .catch(error => setError(true));        
             
+        if (sucesso) {
+            navigationToPatient()
+        }    
     }
 
     function getKeyValue() {
